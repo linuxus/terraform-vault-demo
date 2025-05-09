@@ -169,7 +169,3 @@ To upgrade Vault:
 2. Apply the Terraform changes
 3. Terminate pods one at a time to allow rolling upgrade
 4. Unseal each pod after it restarts
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
