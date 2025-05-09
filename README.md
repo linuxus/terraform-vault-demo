@@ -17,6 +17,7 @@ This module deploys a 3-node Vault cluster using Kubernetes StatefulSets with th
 - Existing EKS cluster
 - AWS CLI configured
 - Terraform 1.0+
+- Terraform IAM Role with correct permissions
 - kubectl configured to access your EKS cluster
 
 ## Architecture
