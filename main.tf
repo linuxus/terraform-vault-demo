@@ -59,24 +59,24 @@ resource "kubernetes_service" "vault_internal" {
       app = "vault"
     }
   }
-  
+
   spec {
     selector = {
       app = "vault"
     }
-    
+
     port {
       name        = "server"
       port        = 8200
       target_port = 8200
     }
-    
+
     port {
       name        = "cluster"
       port        = 8201
       target_port = 8201
     }
-    
+
     cluster_ip = "None"
   }
 }
@@ -90,18 +90,18 @@ resource "kubernetes_service" "vault" {
       app = "vault"
     }
   }
-  
+
   spec {
     selector = {
       app = "vault"
     }
-    
+
     port {
       name        = "http"
       port        = 8200
       target_port = 8200
     }
-    
+
     type = "ClusterIP"
   }
 }
@@ -118,34 +118,34 @@ resource "kubernetes_stateful_set_v1" "vault" {
 
   spec {
     service_name = kubernetes_service.vault_internal.metadata[0].name
-    replicas     = 0  # Start with 0 replicas for manual initialization
-    
+    replicas     = 0 # Start with 0 replicas for manual initialization
+
     selector {
       match_labels = {
         app = "vault"
       }
     }
-    
+
     template {
       metadata {
         labels = {
           app = "vault"
         }
       }
-      
+
       spec {
-        service_account_name = kubernetes_service_account.vault.metadata[0].name
+        service_account_name             = kubernetes_service_account.vault.metadata[0].name
         termination_grace_period_seconds = 10
-        
+
         # Security context for the pod - set fsGroup to ensure volume permissions
         security_context {
-          fs_group = 1000  # Vault group ID
+          fs_group = 1000 # Vault group ID
         }
-        
+
         container {
           name  = "vault"
           image = "hashicorp/vault:${var.vault_version}"
-          
+
           command = ["/bin/sh", "-c"]
           args = [
             <<-EOT
@@ -198,22 +198,22 @@ resource "kubernetes_stateful_set_v1" "vault" {
             exec vault server -config=/vault/config/vault.hcl
             EOT
           ]
-          
+
           port {
             container_port = 8200
             name           = "http"
           }
-          
+
           port {
             container_port = 8201
             name           = "cluster"
           }
-          
+
           env {
             name  = "VAULT_ADDR"
             value = "http://127.0.0.1:8200"
           }
-          
+
           env {
             name = "HOSTNAME"
             value_from {
@@ -222,35 +222,35 @@ resource "kubernetes_stateful_set_v1" "vault" {
               }
             }
           }
-          
+
           env {
             name  = "SKIP_CHOWN"
             value = "true"
           }
-          
+
           env {
             name  = "SKIP_SETCAP"
             value = "true"
           }
-          
+
           security_context {
-            run_as_user  = 100   # Vault user
-            run_as_group = 1000  # Vault group
+            run_as_user  = 100  # Vault user
+            run_as_group = 1000 # Vault group
             capabilities {
               add = ["IPC_LOCK"]
             }
           }
-          
+
           volume_mount {
             name       = "vault-data"
             mount_path = "/vault/data"
           }
-          
+
           volume_mount {
             name       = "vault-config"
             mount_path = "/vault/config"
           }
-          
+
           resources {
             requests = {
               memory = "256Mi"
@@ -261,7 +261,7 @@ resource "kubernetes_stateful_set_v1" "vault" {
               cpu    = "500m"
             }
           }
-          
+
           liveness_probe {
             http_get {
               path   = "/v1/sys/health?standbyok=true&uninitcode=200&sealedcode=200"
@@ -274,7 +274,7 @@ resource "kubernetes_stateful_set_v1" "vault" {
             failure_threshold     = 3
             success_threshold     = 1
           }
-          
+
           # Add a readiness probe to check when it's ok to join/unseal
           readiness_probe {
             http_get {
@@ -289,23 +289,23 @@ resource "kubernetes_stateful_set_v1" "vault" {
             success_threshold     = 1
           }
         }
-        
+
         volume {
           name = "vault-config"
           empty_dir {}
         }
       }
     }
-    
+
     volume_claim_template {
       metadata {
         name = "vault-data"
       }
-      
+
       spec {
         access_modes       = ["ReadWriteOnce"]
         storage_class_name = kubernetes_storage_class.vault_storage.metadata[0].name
-        
+
         resources {
           requests = {
             storage = "5Gi"
@@ -313,7 +313,7 @@ resource "kubernetes_stateful_set_v1" "vault" {
         }
       }
     }
-    
+
     update_strategy {
       type = "OnDelete"
     }
