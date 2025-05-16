@@ -1,7 +1,3 @@
+Deployment # 8 May 16
 Deployment # 8 May 15
 Deployment # 7 May 14
-Deployment # 6 May 14
-Deployment # 5 May 12
-Deployment # 4 May 12
-Deployment # 3 May 12
-Deployment # 2 May 12
